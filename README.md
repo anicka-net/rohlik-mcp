@@ -268,6 +268,18 @@ The validator automatically loads credentials from your Claude Desktop config or
 - Try alternative spellings or broader search terms
 - Verify product exists on Rohlik website directly
 
+#### Server fails with `spawn npx ENOENT`
+
+Under Claude Desktop, failse with:
+```shell
+spawn npx ENOENT
+Server disconnected. Transport closed unexpectedly.
+```
+
+**Solutions:**
+- Change config to use absolute path to npx as /Users/adam/.local/share/mise/installs/node/22.14.0/bin/npx)
+- See more info: https://github.com/tomaspavlin/rohlik-mcp/issues/6
+
 ### Enabling Debug Mode
 
 Add `ROHLIK_DEBUG` to your configuration to see detailed logs:
