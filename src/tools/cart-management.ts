@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { RohlikAPI } from "../rohlik-api.js";
+import { getCurrency } from "../locale.js";
 
 export function createCartManagementTools(createRohlikAPI: () => RohlikAPI) {
   return {
@@ -74,12 +75,12 @@ export function createCartManagementTools(createRohlikAPI: () => RohlikAPI) {
 
           const output = `Cart Summary:
 • Total items: ${cartContent.total_items}
-• Total price: ${cartContent.total_price} CZK
+• Total price: ${cartContent.total_price} ${getCurrency()}
 • Can order: ${cartContent.can_make_order ? 'Yes' : 'No'}
 
 Products in cart:
 ${cartContent.products.map(product => 
-  `• ${product.name} (${product.brand})\n  Quantity: ${product.quantity}\n  Price: ${product.price} CZK\n  Category: ${product.category_name}\n  Cart ID: ${product.cart_item_id}`
+  `• ${product.name} (${product.brand})\n  Quantity: ${product.quantity}\n  Price: ${product.price} ${getCurrency()}\n  Category: ${product.category_name}\n  Cart ID: ${product.cart_item_id}`
 ).join('\n\n')}`;
 
           return {

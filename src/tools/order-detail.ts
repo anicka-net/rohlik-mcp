@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { RohlikAPI } from "../rohlik-api.js";
+import { getCurrency } from "../locale.js";
 
 export function createOrderDetailTool(createRohlikAPI: () => RohlikAPI) {
   return {
@@ -37,7 +38,7 @@ export function createOrderDetailTool(createRohlikAPI: () => RohlikAPI) {
           
           return `  ${index + 1}. ${name}${brand ? ` (${brand})` : ''}
      Quantity: ${quantity}
-     Price: ${price} CZK`;
+     Price: ${price} ${getCurrency()}`;
         };
 
         const order = orderDetail;
@@ -53,13 +54,13 @@ export function createOrderDetailTool(createRohlikAPI: () => RohlikAPI) {
 Order Date: ${orderDate}
 Delivery Date: ${deliveryDate}
 Status: ${status}
-Total Price: ${totalPrice} CZK
+Total Price: ${totalPrice} ${getCurrency()}
 
 📋 PRODUCTS (${products.length} items):
 ${products.map(formatProduct).join('\n\n')}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Total: ${totalPrice} CZK`;
+Total: ${totalPrice} ${getCurrency()}`;
 
         return {
           content: [

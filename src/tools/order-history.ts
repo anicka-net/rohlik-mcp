@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { RohlikAPI } from "../rohlik-api.js";
+import { getCurrency } from "../locale.js";
 
 export function createOrderHistoryTool(createRohlikAPI: () => RohlikAPI) {
   return {
@@ -37,7 +38,7 @@ export function createOrderHistoryTool(createRohlikAPI: () => RohlikAPI) {
           
           return `${index + 1}. ${orderNumber}
    Date: ${orderDate}
-   Total: ${totalPrice} CZK
+   Total: ${totalPrice} ${getCurrency()}
    Status: ${status}`;
         };
 

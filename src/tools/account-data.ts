@@ -1,4 +1,5 @@
 import { RohlikAPI } from "../rohlik-api.js";
+import { getCurrency } from "../locale.js";
 
 export function createAccountDataTool(createRohlikAPI: () => RohlikAPI) {
   return {
@@ -29,7 +30,7 @@ export function createAccountDataTool(createRohlikAPI: () => RohlikAPI) {
         if (accountData.cart) {
           sections.push(`🛒 CART SUMMARY:
 • Total items: ${accountData.cart.total_items}
-• Total price: ${accountData.cart.total_price} CZK
+• Total price: ${accountData.cart.total_price} ${getCurrency()}
 • Can order: ${accountData.cart.can_make_order ? 'Yes' : 'No'}`);
         }
 

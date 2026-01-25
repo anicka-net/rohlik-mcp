@@ -1,4 +1,5 @@
 import { RohlikAPI } from "../rohlik-api.js";
+import { getCurrency } from "../locale.js";
 
 export function createDeliverySlotsTool(createRohlikAPI: () => RohlikAPI) {
   return {
@@ -28,7 +29,7 @@ export function createDeliverySlotsTool(createRohlikAPI: () => RohlikAPI) {
           if (Array.isArray(data)) {
             return `⏰ AVAILABLE DELIVERY SLOTS:\n\n${data.map((slot, index) => 
               `${index + 1}. ${slot.date || 'Unknown date'} ${slot.time || slot.timeRange || 'Unknown time'}
-   Price: ${slot.price || slot.deliveryFee || 'Free'} CZK
+   Price: ${slot.price || slot.deliveryFee || 'Free'} ${getCurrency()}
    Available: ${slot.available ? 'Yes' : 'No'}`
             ).join('\n\n')}`;
           }
