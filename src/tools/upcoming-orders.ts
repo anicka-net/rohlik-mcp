@@ -1,4 +1,5 @@
 import { RohlikAPI } from "../rohlik-api.js";
+import { getCurrency } from "../locale.js";
 
 export function createUpcomingOrdersTool(createRohlikAPI: () => RohlikAPI) {
   return {
@@ -34,7 +35,7 @@ export function createUpcomingOrdersTool(createRohlikAPI: () => RohlikAPI) {
           
           return `${index + 1}. ${orderNumber}
    Delivery: ${deliveryDate} ${deliveryTime}
-   Total: ${totalPrice} CZK
+   Total: ${totalPrice} ${getCurrency()}
    Items: ${itemCount}
    Status: ${status}`;
         };

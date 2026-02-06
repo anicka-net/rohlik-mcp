@@ -1,4 +1,5 @@
 import { RohlikAPI } from "../rohlik-api.js";
+import { getCurrency } from "../locale.js";
 
 export function createPremiumInfoTool(createRohlikAPI: () => RohlikAPI) {
   return {
@@ -39,7 +40,7 @@ export function createPremiumInfoTool(createRohlikAPI: () => RohlikAPI) {
    Type: ${sub.type || 'Unknown'}
    Start: ${sub.startDate || 'Unknown'}
    End: ${sub.endDate || 'Unknown'}
-   Price: ${sub.price || 'Unknown'} CZK`);
+   Price: ${sub.price || 'Unknown'} ${getCurrency()}`);
           }
 
           // Benefits
@@ -50,11 +51,11 @@ ${data.benefits.map((benefit: any) => `   • ${benefit.name || benefit}`).join(
 
           // Savings
           if (data.totalSavings !== undefined) {
-            sections.push(`💰 TOTAL SAVINGS: ${data.totalSavings} CZK`);
+            sections.push(`💰 TOTAL SAVINGS: ${data.totalSavings} ${getCurrency()}`);
           }
 
           if (data.monthlySavings !== undefined) {
-            sections.push(`📊 MONTHLY SAVINGS: ${data.monthlySavings} CZK`);
+            sections.push(`📊 MONTHLY SAVINGS: ${data.monthlySavings} ${getCurrency()}`);
           }
 
           // Free delivery info

@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
 import { Product, SearchResult, CartContent, RohlikCredentials, RohlikAPIResponse, AccountData } from './types.js';
+import { getAcceptLanguage } from './locale.js';
 
 const BASE_URL = process.env.ROHLIK_BASE_URL || 'https://www.rohlik.cz';
 
@@ -43,7 +44,7 @@ export class RohlikAPI {
 
     const headers: Record<string, string> = {
       'Accept': 'application/json, text/plain, */*',
-      'Accept-Language': 'cs-CZ,cs;q=0.9,en;q=0.8',
+      'Accept-Language': getAcceptLanguage(),
       'Content-Type': 'application/json',
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
       'Referer': BASE_URL,

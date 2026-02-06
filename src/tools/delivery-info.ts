@@ -1,4 +1,5 @@
 import { RohlikAPI } from "../rohlik-api.js";
+import { getCurrency } from "../locale.js";
 
 export function createDeliveryInfoTool(createRohlikAPI: () => RohlikAPI) {
   return {
@@ -34,11 +35,11 @@ export function createDeliveryInfoTool(createRohlikAPI: () => RohlikAPI) {
           }
 
           if (data.deliveryFee !== undefined) {
-            sections.push(`💰 DELIVERY FEE: ${data.deliveryFee} CZK`);
+            sections.push(`💰 DELIVERY FEE: ${data.deliveryFee} ${getCurrency()}`);
           }
 
           if (data.minimumOrder !== undefined) {
-            sections.push(`📦 MINIMUM ORDER: ${data.minimumOrder} CZK`);
+            sections.push(`📦 MINIMUM ORDER: ${data.minimumOrder} ${getCurrency()}`);
           }
 
           if (data.deliveryArea) {
