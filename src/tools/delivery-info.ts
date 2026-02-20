@@ -46,9 +46,10 @@ export function createDeliveryInfoTool(createRohlikAPI: () => RohlikAPI) {
             sections.push(`📍 DELIVERY AREA: ${data.deliveryArea}`);
           }
 
-          // If no structured data, show raw JSON
+          // If no structured data, show truncated JSON
           if (sections.length === 0) {
-            sections.push(`🚚 DELIVERY INFO:\n${JSON.stringify(data, null, 2)}`);
+            const json = JSON.stringify(data, null, 2);
+            sections.push(`🚚 DELIVERY INFO:\n${json.length > 2000 ? json.slice(0, 2000) + '\n... (truncated)' : json}`);
           }
 
           return sections.join('\n\n');

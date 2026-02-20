@@ -59,9 +59,10 @@ ${data.bagHistory.map((entry: any, index: number) =>
 ).join('\n')}`);
           }
 
-          // If no structured data, show raw JSON
+          // If no structured data, show truncated JSON
           if (sections.length === 0) {
-            sections.push(`♻️ REUSABLE BAGS INFO:\n${JSON.stringify(data, null, 2)}`);
+            const json = JSON.stringify(data, null, 2);
+            sections.push(`♻️ REUSABLE BAGS INFO:\n${json.length > 2000 ? json.slice(0, 2000) + '\n... (truncated)' : json}`);
           }
 
           return sections.join('\n\n');

@@ -40,7 +40,8 @@ export function createAnnouncementsTool(createRohlikAPI: () => RohlikAPI) {
    ${data.date ? `Date: ${data.date}` : ''}`;
           }
           
-          return `📢 ANNOUNCEMENTS:\n${JSON.stringify(data, null, 2)}`;
+          const json = JSON.stringify(data, null, 2);
+          return `📢 ANNOUNCEMENTS:\n${json.length > 2000 ? json.slice(0, 2000) + '\n... (truncated)' : json}`;
         };
 
         const output = formatAnnouncements(announcements);

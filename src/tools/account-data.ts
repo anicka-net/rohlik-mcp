@@ -19,7 +19,9 @@ export function createAccountDataTool(createRohlikAPI: () => RohlikAPI) {
             return `${title}: No data available`;
           }
           if (typeof data === 'object') {
-            return `${title}: ${JSON.stringify(data, null, 2)}`;
+            const json = JSON.stringify(data, null, 2);
+            // Cap each section to avoid oversized responses
+            return `${title}: ${json.length > 1500 ? json.slice(0, 1500) + '\n... (truncated)' : json}`;
           }
           return `${title}: ${String(data)}`;
         };

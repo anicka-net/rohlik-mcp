@@ -63,9 +63,10 @@ ${data.benefits.map((benefit: any) => `   • ${benefit.name || benefit}`).join(
             sections.push(`🚚 FREE DELIVERIES USED: ${data.freeDeliveryCount}`);
           }
 
-          // If no structured data, show raw JSON
+          // If no structured data, show truncated JSON
           if (sections.length === 0) {
-            sections.push(`⭐ PREMIUM INFO:\n${JSON.stringify(data, null, 2)}`);
+            const json = JSON.stringify(data, null, 2);
+            sections.push(`⭐ PREMIUM INFO:\n${json.length > 2000 ? json.slice(0, 2000) + '\n... (truncated)' : json}`);
           }
 
           return sections.join('\n\n');
