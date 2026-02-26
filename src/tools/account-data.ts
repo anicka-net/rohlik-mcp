@@ -12,84 +12,80 @@ export function createAccountDataTool(createRohlikAPI: () => RohlikAPI) {
     handler: async () => {
       try {
         const api = createRohlikAPI();
-        const accountData = await api.getAccountData();
-
-        const formatSection = (title: string, data: any): string => {
-          if (!data || (Array.isArray(data) && data.length === 0)) {
-            return `${title}: No data available`;
-          }
-          if (typeof data === 'object') {
-            const json = JSON.stringify(data, null, 2);
-            // Cap each section to avoid oversized responses
-            return `${title}: ${json.length > 1500 ? json.slice(0, 1500) + '\n... (truncated)' : json}`;
-          }
-          return `${title}: ${String(data)}`;
-        };
+        const d = await api.getAccountData();
 
         const sections: string[] = [];
+        const cur = getCurrency();
 
         // Cart summary
-        if (accountData.cart) {
-          sections.push(`🛒 CART SUMMARY:
-• Total items: ${accountData.cart.total_items}
-• Total price: ${accountData.cart.total_price} ${getCurrency()}
-• Can order: ${accountData.cart.can_make_order ? 'Yes' : 'No'}`);
+        if (d.cart) {
+          sections.push(`Cart: ${d.cart.total_items} items, ${d.cart.total_price} ${cur}, can order: ${d.cart.can_make_order ? 'yes' : 'no'}`);
         }
 
-        // Delivery info
-        if (accountData.delivery) {
-          sections.push(formatSection("🚚 DELIVERY INFO", accountData.delivery));
+        // Delivery
+        if (d.delivery) {
+          const del = d.delivery;
+          const type = del.deliveryType || 'unknown';
+          const text = del.firstDeliveryText?.default || '';
+          const addr = del.deliveryLocationText || '';
+          sections.push(`Delivery: ${type} (${text})${addr ? `, ${addr}` : ''}`);
         }
 
-        // Next delivery slot
-        if (accountData.next_delivery_slot) {
-          sections.push(formatSection("⏰ NEXT DELIVERY SLOT", accountData.next_delivery_slot));
+        // Express slot
+        if (d.next_delivery_slot?.expressSlot) {
+          const s = d.next_delivery_slot.expressSlot;
+          const time = s.timeWindow || `${s.since}–${s.till}`;
+          const cap = s.timeSlotCapacityDTO?.capacityMessage || '';
+          sections.push(`Express: ${time}, ${s.price ?? 0} ${cur}${cap ? ` (${cap})` : ''}`);
         }
 
-        // Orders
-        if (accountData.next_order) {
-          sections.push(formatSection("📦 UPCOMING ORDER", accountData.next_order));
-        }
-        
-        if (accountData.last_order) {
-          sections.push(formatSection("📋 LAST ORDER", accountData.last_order));
+        // Upcoming order
+        if (d.next_order && !Array.isArray(d.next_order)) {
+          const o = d.next_order;
+          sections.push(`Upcoming order: #${o.id || 'unknown'}`);
+        } else {
+          sections.push('Upcoming order: none');
         }
 
-        // Premium profile
-        if (accountData.premium_profile) {
-          sections.push(formatSection("⭐ PREMIUM PROFILE", accountData.premium_profile));
+        // Last order
+        if (d.last_order) {
+          const orders = Array.isArray(d.last_order) ? d.last_order : [d.last_order];
+          if (orders.length > 0) {
+            const o = orders[0];
+            const total = o.priceComposition?.total?.amount;
+            const date = o.orderTime ? new Date(o.orderTime).toLocaleDateString() : 'unknown';
+            sections.push(`Last order: #${o.id || 'unknown'}, ${o.itemsCount || '?'} items, ${total ?? '?'} ${cur}, ${date}`);
+          }
+        }
+
+        // Premium
+        if (d.premium_profile) {
+          const p = d.premium_profile;
+          const nextPayment = p.prices?.find((pr: any) => pr.label)?.label || '';
+          sections.push(`Premium: active${nextPayment ? ` (${nextPayment})` : ''}`);
         }
 
         // Announcements
-        if (accountData.announcements) {
-          sections.push(formatSection("📢 ANNOUNCEMENTS", accountData.announcements));
+        const anns = d.announcements?.announcements;
+        if (anns && Array.isArray(anns) && anns.length > 0) {
+          sections.push(`Announcements: ${anns.map((a: any) => a.text || a.title || JSON.stringify(a)).join('; ')}`);
         }
 
-        // Reusable bags
-        if (accountData.bags) {
-          sections.push(formatSection("♻️ REUSABLE BAGS", accountData.bags));
+        // Bags
+        if (d.bags) {
+          const b = d.bags;
+          sections.push(`Reusable bags: ${b.current ?? '?'}/${b.max ?? '?'}`);
         }
-
-        const output = sections.length > 0 
-          ? sections.join('\n\n') 
-          : 'No account data available';
 
         return {
-          content: [
-            {
-              type: "text" as const,
-              text: output
-            }
-          ]
+          content: [{
+            type: "text" as const,
+            text: sections.length > 0 ? sections.join('\n') : 'No account data available'
+          }]
         };
       } catch (error) {
         return {
-          content: [
-            {
-              type: "text" as const,
-              text: error instanceof Error ? error.message : String(error)
-            }
-          ],
+          content: [{ type: "text" as const, text: error instanceof Error ? error.message : String(error) }],
           isError: true
         };
       }

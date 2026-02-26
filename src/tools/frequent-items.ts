@@ -161,29 +161,16 @@ export function createFrequentItemsTool(createRohlikAPI: () => RohlikAPI) {
         }
 
         // Step 5: Format output
-        const formatItem = (item: ProductFrequency, index: number, showCategory: boolean = false): string => {
-          const brand = item.brand ? ` (${item.brand})` : '';
-          const avgPrice = item.averagePrice ? `${item.averagePrice.toFixed(2)} Kč` : 'N/A';
-          const lastOrder = item.lastOrderDate ? new Date(item.lastOrderDate).toLocaleDateString() : 'N/A';
-          const category = showCategory && item.category ? ` • ${item.category}` : '';
-
-          return `${index + 1}. ${item.productName}${brand}${category}
-   📊 ${item.frequency}× orders • ${item.totalQuantity} units • 💰 Avg: ${avgPrice} • 📅 Last: ${lastOrder}
-   🆔 ${item.productId}`;
+        const fmtItem = (item: ProductFrequency, i: number, showCat: boolean): string => {
+          const price = item.averagePrice ? `${item.averagePrice.toFixed(0)} Kč` : '?';
+          const cat = showCat && item.category ? ` [${item.category}]` : '';
+          return `${i + 1}. ${item.productName}${cat} — ${item.frequency}x, ~${price}, id:${item.productId}`;
         };
 
-        // Build overall top items section
-        let output = `🛒 MOST FREQUENTLY PURCHASED ITEMS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📈 Analysis: ${processedOrders} orders • ${totalProducts} total items
+        let output = `Frequent items (${processedOrders} orders, ${totalProducts} products):\n\n`;
+        output += sortedProducts.map((item, i) => fmtItem(item, i, true)).join('\n');
 
-🏆 TOP ${sortedProducts.length} OVERALL:
-
-${sortedProducts.map((item, idx) => formatItem(item, idx, true)).join('\n\n')}`;
-
-        // Add category breakdown if requested
         if (show_categories) {
-          // Sort categories by total frequency
           const sortedCategories = Array.from(categoryMap.values())
             .sort((a, b) => {
               const aTotal = a.products.reduce((sum, p) => sum + p.frequency, 0);
@@ -191,18 +178,15 @@ ${sortedProducts.map((item, idx) => formatItem(item, idx, true)).join('\n\n')}`;
               return bTotal - aTotal;
             });
 
-          output += '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📂 TOP ITEMS BY CATEGORY:\n';
-
+          output += '\n\nBy category:';
           for (const category of sortedCategories) {
-            const topCategoryProducts = category.products.slice(0, top_per_category);
-            const totalCategoryFrequency = category.products.reduce((sum, p) => sum + p.frequency, 0);
-
-            output += `\n\n📦 ${category.categoryName.toUpperCase()} (${totalCategoryFrequency} total orders)\n${'─'.repeat(40)}\n`;
-            output += topCategoryProducts.map((item, idx) => formatItem(item, idx, false)).join('\n\n');
+            const items = category.products.slice(0, top_per_category);
+            output += `\n\n${category.categoryName}:`;
+            output += '\n' + items.map((item, i) => fmtItem(item, i, false)).join('\n');
           }
         }
 
-        output += '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n💡 Tip: Use product IDs with add_to_cart to quickly reorder your favorites!';
+        output += '\n\nUse product IDs with add_to_cart to reorder.';
 
         return {
           content: [

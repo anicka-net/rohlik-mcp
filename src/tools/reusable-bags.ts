@@ -11,81 +11,30 @@ export function createReusableBagsTool(createRohlikAPI: () => RohlikAPI) {
     handler: async () => {
       try {
         const api = createRohlikAPI();
-        const bagsInfo = await api.getReusableBagsInfo();
+        const data = await api.getReusableBagsInfo();
 
-        if (!bagsInfo) {
-          return {
-            content: [
-              {
-                type: "text" as const,
-                text: "No reusable bags information available."
-              }
-            ]
-          };
+        if (!data) {
+          return { content: [{ type: "text" as const, text: "No reusable bags information available." }] };
         }
 
-        const formatBagsInfo = (data: any): string => {
-          const sections: string[] = [];
-          
-          // Bag count
-          if (data.totalBags !== undefined) {
-            sections.push(`♻️ TOTAL REUSABLE BAGS: ${data.totalBags}`);
-          }
+        const lines: string[] = [];
 
-          // Available bags
-          if (data.availableBags !== undefined) {
-            sections.push(`📦 AVAILABLE BAGS: ${data.availableBags}`);
-          }
-
-          // Bags in use
-          if (data.bagsInUse !== undefined) {
-            sections.push(`🛍️ BAGS IN USE: ${data.bagsInUse}`);
-          }
-
-          // Environmental impact
-          if (data.plasticSaved !== undefined) {
-            sections.push(`🌍 PLASTIC SAVED: ${data.plasticSaved}g`);
-          }
-
-          if (data.co2Saved !== undefined) {
-            sections.push(`🌱 CO2 SAVED: ${data.co2Saved}g`);
-          }
-
-          // Bag history
-          if (data.bagHistory && Array.isArray(data.bagHistory)) {
-            sections.push(`📋 BAG HISTORY:
-${data.bagHistory.map((entry: any, index: number) => 
-  `   ${index + 1}. ${entry.date || 'Unknown date'}: ${entry.action || 'Unknown action'} (${entry.count || 1} bags)`
-).join('\n')}`);
-          }
-
-          // If no structured data, show truncated JSON
-          if (sections.length === 0) {
-            const json = JSON.stringify(data, null, 2);
-            sections.push(`♻️ REUSABLE BAGS INFO:\n${json.length > 2000 ? json.slice(0, 2000) + '\n... (truncated)' : json}`);
-          }
-
-          return sections.join('\n\n');
-        };
-
-        const output = formatBagsInfo(bagsInfo);
+        // Structured fields
+        if (data.current !== undefined && data.max !== undefined) {
+          lines.push(`Bags: ${data.current}/${data.max}`);
+        }
+        if (data.totalBags !== undefined) lines.push(`Total bags: ${data.totalBags}`);
+        if (data.availableBags !== undefined) lines.push(`Available: ${data.availableBags}`);
+        if (data.plasticSaved !== undefined) lines.push(`Plastic saved: ${data.plasticSaved}g`);
+        if (data.co2Saved !== undefined) lines.push(`CO2 saved: ${data.co2Saved}g`);
+        if (data.deposit !== undefined && data.deposit !== null) lines.push(`Deposit: ${data.deposit}`);
 
         return {
-          content: [
-            {
-              type: "text" as const,
-              text: output
-            }
-          ]
+          content: [{ type: "text" as const, text: lines.length > 0 ? lines.join('\n') : 'Bags: no details available' }]
         };
       } catch (error) {
         return {
-          content: [
-            {
-              type: "text" as const,
-              text: error instanceof Error ? error.message : String(error)
-            }
-          ],
+          content: [{ type: "text" as const, text: error instanceof Error ? error.message : String(error) }],
           isError: true
         };
       }
