@@ -71,7 +71,8 @@ export class RohlikAPI {
     }
 
     if (!response.ok) {
-      throw new RohlikAPIError(`HTTP ${response.status}: ${response.statusText}`, response.status);
+      const errorBody = await response.text().catch(() => '');
+      throw new RohlikAPIError(`HTTP ${response.status} on ${url}: ${errorBody.slice(0, 300)}`, response.status);
     }
 
     return await response.json() as RohlikAPIResponse<T>;
@@ -447,6 +448,121 @@ export class RohlikAPI {
     try {
       const response = await this.makeRequest<any>('/api/v1/reusable-bags/user-info');
       return response.data || response;
+    } finally {
+      await this.logout();
+    }
+  }
+
+  // Known last-minute subcategory IDs — these map to standard Rohlik categories
+  static readonly LAST_MINUTE_CATEGORIES: { id: number; name: string }[] = [
+    { id: 300101000, name: "Pekárna a cukrárna" },
+    { id: 300102000, name: "Ovoce a zelenina" },
+    { id: 300103000, name: "Maso a ryby" },
+    { id: 300104000, name: "Uzeniny a lahůdky" },
+    { id: 300105000, name: "Mléčné a chlazené" },
+    { id: 300106000, name: "Trvanlivé" },
+    { id: 300108000, name: "Nápoje" },
+    { id: 300110000, name: "Dítě" },
+    { id: 300111000, name: "Domácnost a zahrada" },
+    { id: 300112000, name: "Zvíře" },
+    { id: 300112393, name: "Speciální výživa" },
+    { id: 300121429, name: "Plant Based" },
+    { id: 300124206, name: "Kosmetika" },
+  ];
+
+  async getLastMinuteCounts(): Promise<{ id: number; name: string; count: number }[]> {
+    const results: { id: number; name: string; count: number }[] = [];
+    for (const cat of RohlikAPI.LAST_MINUTE_CATEGORIES) {
+      try {
+        const response = await this.makeRequest<any>(
+          `/api/v1/categories/last-minute/${cat.id}/products/count`
+        );
+        const count = (response as any)?.results ?? (response as any)?.data?.results ?? 0;
+        if (count > 0) {
+          results.push({ ...cat, count });
+        }
+      } catch {
+        // Category might be empty or unavailable, skip
+      }
+    }
+    return results;
+  }
+
+  async getLastMinuteProducts(categoryId: number, page: number = 0, size: number = 14): Promise<{ productIds: number[]; total: number }> {
+    const response = await this.makeRequest<any>(
+      `/api/v1/categories/last-minute/${categoryId}/products?page=${page}&size=${size}&sort=expiration-asc`
+    );
+    const data = (response as any);
+    return {
+      productIds: data.productIds || data.data?.productIds || [],
+      total: data.pageable?.offset !== undefined
+        ? data.pageable.offset + (data.productIds?.length || 0)
+        : (data.productIds?.length || 0)
+    };
+  }
+
+  async getProductCards(productIds: number[]): Promise<any[]> {
+    if (productIds.length === 0) return [];
+    // Batch in groups of 50 to avoid URL length limits
+    const results: any[] = [];
+    for (let i = 0; i < productIds.length; i += 50) {
+      const batch = productIds.slice(i, i + 50);
+      const params = batch.map(id => `products=${id}`).join('&');
+      const response = await this.makeRequest<any>(`/api/v1/products/card?${params}`);
+      const products = Array.isArray(response) ? response : (response.data || response);
+      if (Array.isArray(products)) {
+        results.push(...products);
+      }
+    }
+    return results;
+  }
+
+  async getLastMinute(categoryId?: number, limit: number = 30): Promise<{ categories: any[]; products: any[] }> {
+    await this.login();
+
+    try {
+      // 1. Get categories with counts
+      let categories: { id: number; name: string; count: number }[];
+      try {
+        categories = await this.getLastMinuteCounts();
+      } catch (e: any) {
+        throw new RohlikAPIError(`Failed to fetch categories: ${e.message}`);
+      }
+
+      // 2. Get product IDs from selected category or all
+      let allProductIds: number[] = [];
+      const targetCategories = categoryId
+        ? categories.filter(c => c.id === categoryId)
+        : categories;
+
+      for (const cat of targetCategories) {
+        try {
+          // Page through in standard page sizes of 14
+          let page = 0;
+          while (allProductIds.length < limit) {
+            const { productIds } = await this.getLastMinuteProducts(cat.id, page);
+            if (productIds.length === 0) break;
+            allProductIds.push(...productIds);
+            if (productIds.length < 14) break; // last page
+            page++;
+          }
+          if (allProductIds.length >= limit) break;
+        } catch (e: any) {
+          throw new RohlikAPIError(`Failed to fetch products for category ${cat.id} (${cat.name}): ${e.message}`);
+        }
+      }
+
+      allProductIds = allProductIds.slice(0, limit);
+
+      // 3. Get product details
+      let products: any[];
+      try {
+        products = await this.getProductCards(allProductIds);
+      } catch (e: any) {
+        throw new RohlikAPIError(`Failed to fetch product cards for ${allProductIds.length} products: ${e.message}`);
+      }
+
+      return { categories, products };
     } finally {
       await this.logout();
     }
