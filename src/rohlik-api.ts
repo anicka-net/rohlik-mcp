@@ -568,6 +568,178 @@ export class RohlikAPI {
     }
   }
 
+  async checkCart(): Promise<any> {
+    await this.login();
+
+    try {
+      const response = await this.makeRequest<any>('/services/frontend-service/v2/cart-review/check-cart');
+      return response.data || response;
+    } finally {
+      await this.logout();
+    }
+  }
+
+  async updateCartItemQuantity(orderFieldId: string, quantity: number): Promise<any> {
+    await this.login();
+
+    try {
+      const response = await this.makeRequest<any>(
+        `/services/frontend-service/v2/cart-review/item/${orderFieldId}`,
+        {
+          method: 'PUT',
+          body: JSON.stringify({ quantity })
+        }
+      );
+      return response.data || response;
+    } finally {
+      await this.logout();
+    }
+  }
+
+  async getCheckout(): Promise<any> {
+    await this.login();
+
+    try {
+      const response = await this.makeRequest<any>('/api/v2/checkout');
+      return response.data || response;
+    } finally {
+      await this.logout();
+    }
+  }
+
+  async getSuborderInfo(): Promise<any> {
+    await this.login();
+
+    try {
+      const response = await this.makeRequest<any>('/services/frontend-service/suborder-info');
+      return response.data || response;
+    } finally {
+      await this.logout();
+    }
+  }
+
+  async getTimeslots(cartTotal: number): Promise<any> {
+    await this.login();
+
+    try {
+      if (!this.userId || !this.addressId) {
+        throw new RohlikAPIError('User ID or Address ID not available');
+      }
+      const response = await this.makeRequest<any>(
+        `/services/frontend-service/timeslots-api/${cartTotal}?userId=${this.userId}&addressId=${this.addressId}&reasonableDeliveryTime=false`
+      );
+      return response.data || response;
+    } finally {
+      await this.logout();
+    }
+  }
+
+  async reserveTimeslot(slotId: number, slotType: string = 'ON_TIME'): Promise<any> {
+    await this.login();
+
+    try {
+      const response = await this.makeRequest<any>(
+        '/services/frontend-service/v1/timeslot-reservation',
+        {
+          method: 'POST',
+          body: JSON.stringify({ slotId, slotType })
+        }
+      );
+      return response.data || response;
+    } finally {
+      await this.logout();
+    }
+  }
+
+  async selectTimeslot(slotId: number, slotType: string, slotInfo: any): Promise<any> {
+    await this.login();
+
+    try {
+      const response = await this.makeRequest<any>(
+        '/api/v2/checkout/timeslot',
+        {
+          method: 'PATCH',
+          body: JSON.stringify({ slotId, slotType, valid: true, slotInfo })
+        }
+      );
+      return response.data || response;
+    } finally {
+      await this.logout();
+    }
+  }
+
+  async enableSuborder(): Promise<any> {
+    await this.login();
+
+    try {
+      const response = await this.makeRequest<any>(
+        '/api/v2/checkout/suborder',
+        {
+          method: 'PATCH',
+          body: JSON.stringify({ isSuborder: true })
+        }
+      );
+      return response.data || response;
+    } finally {
+      await this.logout();
+    }
+  }
+
+  async submitOrder(): Promise<any> {
+    await this.login();
+
+    try {
+      const response = await this.makeRequest<any>(
+        '/api/v2/checkout/submit-web',
+        {
+          method: 'POST',
+          body: JSON.stringify({ agreementList: [] })
+        }
+      );
+      return response.data || response;
+    } finally {
+      await this.logout();
+    }
+  }
+
+  async payWithStoredCard(storedPaymentMethodId: string, brand: string, holderName: string): Promise<any> {
+    await this.login();
+
+    try {
+      const response = await this.makeRequest<any>(
+        '/services/frontend-service/order-review/payment/adyen-pay',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            adyenPayload: {
+              paymentMethod: {
+                type: 'scheme',
+                storedPaymentMethodId,
+                brand,
+                holderName
+              },
+              browserInfo: {
+                acceptHeader: '*/*',
+                colorDepth: 24,
+                language: 'cs-CZ',
+                javaEnabled: false,
+                screenHeight: 1440,
+                screenWidth: 2560,
+                userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36',
+                timeZoneOffset: -60
+              },
+              origin: BASE_URL,
+              clientStateDataIndicator: true
+            }
+          })
+        }
+      );
+      return response.data || response;
+    } finally {
+      await this.logout();
+    }
+  }
+
   async getOrderDetail(orderId: string): Promise<any> {
     await this.login();
 

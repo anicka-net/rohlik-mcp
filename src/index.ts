@@ -19,6 +19,7 @@ import { createFrequentItemsTool } from "./tools/frequent-items.js";
 import { createMealSuggestionsTool } from "./tools/meal-suggestions.js";
 import { createShoppingScenariosTool } from "./tools/shopping-scenarios.js";
 import { createLastMinuteTool } from "./tools/last-minute.js";
+import { createCheckoutTools } from "./tools/checkout.js";
 
 const server = new McpServer(
   {
@@ -65,6 +66,7 @@ const frequentItems = createFrequentItemsTool(createRohlikAPI);
 const mealSuggestions = createMealSuggestionsTool(createRohlikAPI);
 const shoppingScenarios = createShoppingScenariosTool();
 const lastMinute = createLastMinuteTool(createRohlikAPI);
+const checkoutTools = createCheckoutTools(createRohlikAPI);
 
 // Core functionality
 server.registerTool(searchProducts.name, searchProducts.definition, searchProducts.handler);
@@ -93,6 +95,15 @@ server.registerTool(frequentItems.name, frequentItems.definition, frequentItems.
 server.registerTool(mealSuggestions.name, mealSuggestions.definition, mealSuggestions.handler);
 server.registerTool(shoppingScenarios.name, shoppingScenarios.definition, shoppingScenarios.handler);
 server.registerTool(lastMinute.name, lastMinute.definition, lastMinute.handler);
+
+// Checkout & ordering
+server.registerTool(checkoutTools.checkCart.name, checkoutTools.checkCart.definition, checkoutTools.checkCart.handler);
+server.registerTool(checkoutTools.updateCartItem.name, checkoutTools.updateCartItem.definition, checkoutTools.updateCartItem.handler);
+server.registerTool(checkoutTools.getCheckoutStatus.name, checkoutTools.getCheckoutStatus.definition, checkoutTools.getCheckoutStatus.handler);
+server.registerTool(checkoutTools.getTimeslots.name, checkoutTools.getTimeslots.definition, checkoutTools.getTimeslots.handler);
+server.registerTool(checkoutTools.reserveTimeslot.name, checkoutTools.reserveTimeslot.definition, checkoutTools.reserveTimeslot.handler);
+server.registerTool(checkoutTools.submitOrder.name, checkoutTools.submitOrder.definition, checkoutTools.submitOrder.handler);
+server.registerTool(checkoutTools.payWithCard.name, checkoutTools.payWithCard.definition, checkoutTools.payWithCard.handler);
 
 async function main() {
   const transport = new StdioServerTransport();
